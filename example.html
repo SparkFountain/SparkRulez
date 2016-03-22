@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+  <meta charset="UTF-8">
+  <title>SparkRulez - Parse Perfect Example</title>
+  <style>
+    #container {
+      background-color: #cccccc;
+      width: 100%;
+      height: 100%;
+    }
+    #quickBrownFox {
+      border: 1px solid aquamarine;
+      border-radius: 5px;
+      background-color: antiquewhite;
+      padding: 5px;
+      margin-left: 100px;
+      width: 400px;
+      text-align: center;
+    }
+  </style>
+  <script src="sparkRulez.js"></script>
+  <script>
+    function execute() {
+      var quickBrownFox = new S_String();
+      quickBrownFox.setValue('The quick brown fox jumps over the lazy cat!');
+      document.getElementById('quickBrownFox').innerHTML = quickBrownFox.getValue();
+      document.getElementById('ex1').innerHTML = quickBrownFox.getValue();
+      document.getElementById('ex2').innerHTML = quickBrownFox.indexOf('quick', 'first;');
+    }
+  </script>
+</head>
+<body onload="execute()">
+  <div id="container">
+    <div id="quickBrownFox"></div>
+    <p>Pure string value: <span id="ex1"></span></p>
+    <p>Index of the letter 'q' where the String 'quick' first occurs: <span id="ex2"></span></p>
+  </div>
+</body>
+</html>

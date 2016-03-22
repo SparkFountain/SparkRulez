@@ -1,6 +1,10 @@
 /**
  * Created by stbe on 21.03.16.
  */
+/**
+ * @description Data type for string objects that have many manipulation options
+ * @param {string} value The string value of this text
+ */
 var S_String = function() {
   this.value = '';
 
