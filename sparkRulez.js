@@ -305,246 +305,286 @@ var S_String = function() {
       return result;
     }
   };
-
 };
 
-/*'@description Creates a new S_String object
- '@value The string value for the new S_String object
- '@return The new S_String object with @value
- Function CreateSparkString:S_String(value:String)
- Local s:S_String = New S_String
- s.value = value
- Return s
- End Function
+/**
+ * @description Data type for Flag Parsing (used mainly in S_String object methods)
+ * @param {string[]} key A string array which saves all keys (=flag names)
+ * @param {string[]} value A string array which saves all flag values (if they exist)
+ */
+var S_FlagParser = function() {
+  this.key = [];
+  this.value = [];
 
- '@description Data type for Flag Parsing (used mainly in S_String object methods)
- '@key A string array which saves all keys (=flag names)
- '@value A string array which saves all flag values (if they exist)
- Type S_FlagParser
- Field key:String[] = New String[0]
- Field value:String[] = New String[0]
+  /**
+   * @description Parses all flags from a given string and stores them in the object's @key / @value field
+   * @param {string} flags An string that contains flags
+   * @annotation This method uses "classical" string functions instead of S_String methods to avoid infinite loops
+   */
+  this.getFlags = function(flags) {
+    //get all delimiter positions
+    var delimiterPos = [];
+    var currentDelimiterPos = 0;
+    while(true) {
+      currentDelimiterPos = Instr(flags,";", currentDelimiterPos+1);
+      if(currentDelimiterPos == 0) { break; }
+      delimiterPos.push(currentDelimiterPos);
+    }
 
- '@description Parses all flags from a given string and stores them in the object's @key / @value field
- '@flags An string that contains flags
- '@annotation This method uses "classical" string functions instead of S_String methods to avoid infinite loops
- Method GetFlags(flags:String)
- 'get all delimiter positions
- Local delimiterPos:Int[] = New Int[0]
- Local currentDelimiterPos:Int = 0
- Repeat
- currentDelimiterPos = Instr(flags,";", currentDelimiterPos+1)
- If(currentDelimiterPos = 0) Then Exit
- delimiterPos = delimiterPos[..Len(delimiterPos)+1]
- delimiterPos[Len(delimiterPos)-1] = currentDelimiterPos
- Forever
+    for(var i=0; i<delimiterPos.length; i++) {
+      var startPos;
+      if(i == 0) {
+        startPos = 1;
+      } else {
+        startPos = delimiterPos[i-1]+1
+      }
+      var flag = flags.substr(startPos, delimiterPos[i]-startPos).trim();
 
- For Local i:Int=0 To Len(delimiterPos)-1
- Local startPos:Int
- If(i = 0) Then
- startPos = 1
- Else
- startPos = delimiterPos[i-1]+1
- EndIf
- Local flag:String = Trim(Mid(flags, startPos, delimiterPos[i]-startPos))
+      var equalsPos = flag.indexOf("=");
+      if(equalsPos > 0) {
+        this.key.push(flag.substr(1, equalsPos-1));
+        this.value.push(flag.substr(equalsPos+1));
+      } else {
+        this.key.push(flag);
+        this.value.push('');
+      }
+    }
+  };
+};
 
- Self.key = Self.key[..Len(Self.key)+1]
- Self.value = Self.value[..Len(Self.value)+1]
- Local equalsPos:Int = Instr(flag, "=")
- If(equalsPos > 0) Then
- Self.key[Len(Self.key)-1] = Mid(flag, 1, equalsPos-1)
- Self.value[Len(Self.value)-1] = Mid(flag, equalsPos+1)
- Else
- Self.key[Len(Self.key)-1] = flag
- Self.value[Len(Self.value)-1] = ""
- EndIf
- Next
- End Method
- End Type
+/**
+ * @description Patterns like RegEx's
+ * @param {string[]} chain A TList object which saves the elements of which the Pattern consists
+ * @param {int} minOccurrence
+ * @param {int} maxOccurrence
+ */
+var S_Pattern = function() {
+  //@TODO
+  this.chain = [];
+  this.minOccurrence = 0;
+  this.maxOccurrence = 0;
 
- '@description Patterns like RegEx's
- '@chain A TList object which saves the elements of which the Pattern consists
- '@TODO
- Type S_Pattern
- Field chain:String[]
- Field minOccurrence:Int
- Field maxOccurrence:Int
+  /**
+   * @description Adds a string to the chain.
+   * @param {string} s A string
+   */
+  this.add = function(s) {
+    Self.chain.push(s);
+  };
 
- Method Add(s:String)
- Self.chain = Self.chain[..Len(Self.chain)+1]
- Self.chain[Len(Self.chain)-1] = s
- End Method
+  /**
+   * @description Adds many strings to the chain.
+   * @param {string[]} s A string array
+   */
+  this.addMany = function(s) {
+    for(var i=0; i<s.length; i++) {
+      this.chain.push(s[i]);
+    }
+  };
 
- Method AddMany(s:String[])
- For Local i:Int=0 To Len(s)-1
- Self.chain = Self.chain[..Len(Self.chain)+1]
- Self.chain[Len(Self.chain)-1] = s[i]
- Next
- End Method
+  /**
+   * @description
+   * @param {int} atLeast
+   * @param {int} atMost
+   */
+  this.occurs = function(atLeast, atMost) {
+    this.minOccurrence = atLeast;
+    this.maxOccurrence = atMost;
+  };
 
- Method Occurs(atLeast:Int, atMost:Int)
- Self.minOccurrence = atLeast
- Self.maxOccurrence = atMost
- End Method
-
- Method OccursExactly(value:Int)
- Self.minOccurrence = value
- Self.maxOccurrence = value
- End Method
-
-
- Rem
- OLD STUFF BELOW
- End Rem
-
- '@description An arbitrary subset of @set occurs certain times
- '@set An S_StringSet object
- '@howOftenMin how often the subset occurs at least
- '@howOftenMax how often the subset occurs at most
- '@TODO
- Method OccursAny:Int(set:String[], howOftenMin:Int, howOftenMax:Int)
- AddOccurrence(set, -1, howOftenMin, howOftenMax, "any")
- End Method
-
- '@description A subset of @set with at least @howMany strings occurs certain times
- '@set An S_StringSet object
- '@howMany how many strings the subset of @set must have at least
- '@howOftenMin how often the subset occurs at least
- '@howOftenMax how often the subset occurs at most
- '@TODO
- Method OccursAtLeast(set:String[], howMany:Int, howOftenMin:Int, howOftenMax:Int)
- AddOccurrence(set, howMany, howOftenMin, howOftenMax, "at_least")
- End Method
-
- '@description A subset of @set with at most @howMany strings occurs certain times
- '@set An S_StringSet object
- '@howMany how many strings the subset of @set can have at most
- '@howOftenMin how often the subset occurs at least
- '@howOftenMax how often the subset occurs at most
- '@TODO
- Method OccursAtMost(set:String[], howMany:Int, howOftenMin:Int, howOftenMax:Int)
- AddOccurrence(set, howMany, howOftenMin, howOftenMax, "at_most")
- End Method
-
- '@description All strings of @set occur certain times
- '@set An S_StringSet object
- '@howOftenMin how often the set occurs at least
- '@howOftenMax how often the set occurs at most
- '@TODO
- Method OccursEvery(set:String[], howOftenMin:Int, howOftenMax:Int)
- AddOccurrence(set, -1, howOftenMin, howOftenMax, "every")
- End Method
-
- '@description A "parent pattern" occurs several times
- '@pattern A "parent" S_Pattern object
- '@howOftenMin how often @pattern occurs at least
- '@howOftenMax how often @pattern occurs at most
- '@TODO
- Method OccursPattern(pattern:S_Pattern, howOftenMin:Int, howOftenMax:Int)
-
- End Method
-
- Method AddOccurrence(set:String[], howMany:Int, howOftenMin:Int, howOftenMax:Int, sort:String)
- Rem
- Local o:S_Occurrence = New S_Occurrence
- o.set = set
- o.howMany = howMany
- o.howOftenMin = howOftenMin
- o.howOftenMax = howOftenMax
- o.sort = sort
- chain.AddLast(o)
- End Rem
- End Method
-
- Method Find(search:S_String)
- Rem
- For o:S_Occurrence = EachIn chain
- For s:String = EachIn o.set
- Local totalOccurrences:Int[] = search.AllIndexesOf(s)
- If(Len(totalOccurrences) >= o.howOftenMin And Len(totalOccurrences) <= o.howOftenMax) Then
- 'add sub-result
- EndIf
- Next
- Next
- End Rem
- End Method
- End Type
-
- '@description Chains several patterns or other pattern chains together
- Type S_PatternChain
- Field chain:Object[]
- Field chainTypes:String[]
-
- Method AddPattern(pattern:S_Pattern)
- Self.chain = Self.chain[..Len(Self.chain)+1]
- Self.chain[Len(Self.chain)-1] = pattern
- Self.chainTypes = Self.chainTypes + [""]
- Self.chainTypes[Len(Self.chainTypes)-1] = "pattern"
- End Method
-
- Method AddPatternChain(patternChain:S_PatternChain)
- Self.chain = Self.chain[..Len(Self.chain)+1]
- Self.chain[Len(Self.chain)-1] = patternChain
- Self.chainTypes = Self.chainTypes + [""]
- Self.chainTypes[Len(Self.chainTypes)-1] = "patternChain"
- End Method
+  /**
+   * @description
+   * @param {int} value
+   */
+  this.occursExactly = function(value) {
+    this.minOccurrence = value;
+    this.maxOccurrence = value;
+  };
 
 
- Method Surround(open:String, close:String, flags:String)
- Local openPattern:S_Pattern = New S_Pattern
- openPattern.Add(open)
- chain = [openPattern] + chain
- Local closePattern:S_Pattern = New S_Pattern
- closePattern.Add(close)
- Self.AddPattern(closePattern)
- End Method
+  /**
+  OLD STUFF BELOW
+  */
 
- Method SurroundChoice(open:String[], close:String[], flags:String)
- Local openPattern:S_Pattern = New S_Pattern
- openPattern.AddMany(open)
- Self.chain = [openPattern] + Self.chain
- Self.chainTypes = Self.chainTypes + ["pattern"]
- Local closePattern:S_Pattern = New S_Pattern
- closePattern.AddMany(close)
- Self.AddPattern(closePattern)
- Self.chainTypes = Self.chainTypes + ["pattern"]
- End Method
- End Type
+  /**
+   * @description An arbitrary subset of @set occurs certain times
+   * @param {string[]} set An S_StringSet object
+   * @param {int} howOftenMin how often the subset occurs at least
+   * @param {int} howOftenMax how often the subset occurs at most
+   */
+  this.occursAny = function(set, howOftenMin, howOftenMax) {
+    //@TODO
+    this.addOccurrence(set, -1, howOftenMin, howOftenMax, "any");
+  };
 
- '@description Data type for Occurrences of S_StringSet's
- Type S_Occurrence
- Field set:String[]
- Field howMany:Int
- Field howOftenMin:Int
- Field howOftenMax:Int
- Field sort:String
- End Type
+  /**
+   * @description A subset of @set with at least @howMany strings occurs certain times
+   * @param {string[]} set An S_StringSet object
+   * @param {int} howMany how many strings the subset of @set must have at least
+   * @param {int} howOftenMin how often the subset occurs at least
+   * @param {int} howOftenMax how often the subset occurs at most
+   */
+  this.occursAtLeast = function(set, howMany, howOftenMin, howOftenMax) {
+    //@TODO
+    this.addOccurrence(set, howMany, howOftenMin, howOftenMax, "at_least");
+  };
 
- '@description Data type for String collections that can be used for S_Pattern objects.
- '@TODO remove this code??
- Rem
- Type S_StringSet
- Field chain:String[]
- '@description Adds a new String to Self
- '@newString a new String for this set
- Method Add(newString:String)
- Self.chain = Self.chain[..Len(Self.chain)+1]
- Self.chain[Len(Self.chain)-1] = newString
- End Method
+  /**
+   * @description A subset of @set with at most @howMany strings occurs certain times
+   * @param {string[]} set An S_StringSet object
+   * @param {int} howMany how many strings the subset of @set can have at most
+   * @param {int} howOftenMin how often the subset occurs at least
+   * @param {int} howOftenMax how often the subset occurs at most
+   */
+  this.occursAtMost = function(set, howMany, howOftenMin, howOftenMax) {
+    //@TODO
+    this.addOccurrence(set, howMany, howOftenMin, howOftenMax, "at_most");
+  };
 
- '@description Adds some new Strings to Self
- '@newString some new Strings for this set
- Method AddMany(newStrings:String[])
- For Local currentString:String = EachIn newStrings
- Self.Add(currentString)
- Next
- End Method
- End Type
- End Rem
+  /**
+   * @description All strings of @set occur certain times
+   * @param {string[]} set An S_StringSet object
+   * @param {int} howOftenMin how often the set occurs at least
+   * @param {int} howOftenMax how often the set occurs at most
+   */
+  this.occursEvery = function(set, howOftenMin, howOftenMax) {
+    //@TODO
+    this.addOccurrence(set, -1, howOftenMin, howOftenMax, "every")
+  };
 
- '@description Data type for results after @Search-Method was executed on an S_String object
- '@TODO
- Type S_Trove
- Field results:String[]			'what is (are) the result string(s)
- Field howOften:Int				'how often the pattern was found
- Field atWhichPositions:Int[]	'at which position(s) in the string
- End Type*/
+  /**
+   * @description A "parent pattern" occurs several times
+   * @param {S_Pattern} pattern A "parent" S_Pattern object
+   * @param {int} howOftenMin how often @pattern occurs at least
+   * @param {int} howOftenMax how often @pattern occurs at most
+   */
+
+  this.occursPattern = function(pattern, howOftenMin, howOftenMax) {
+    //@TODO
+  };
+
+  /**
+   * @description
+   * @param {string[]} set An S_StringSet object
+   * @param {int} howMany how many strings the subset of @set can have at most
+   * @param {int} howOftenMin how often the subset occurs at least
+   * @param {int} howOftenMax how often the subset occurs at most
+   * @param {string} sort
+   */
+  this.addOccurrence = function(set, howMany, howOftenMin, howOftenMax, sort) {
+    /**
+     Local o:S_Occurrence = New S_Occurrence
+     o.set = set
+     o.howMany = howMany
+     o.howOftenMin = howOftenMin
+     o.howOftenMax = howOftenMax
+     o.sort = sort
+     chain.AddLast(o)
+     */
+  };
+
+  /**
+   * @description
+   * @param {S_String} search
+   */
+  this.find = function(search) {
+    /**
+    For o:S_Occurrence = EachIn chain
+    For s:String = EachIn o.set
+    Local totalOccurrences:Int[] = search.AllIndexesOf(s)
+    If(Len(totalOccurrences) >= o.howOftenMin And Len(totalOccurrences) <= o.howOftenMax) Then
+    'add sub-result
+    EndIf
+    Next
+    Next
+    */
+  };
+};
+
+/**
+ * @description Chains several patterns or other pattern chains together
+ * @param {object[]} chain
+ * @param {string[} chainTypes
+ */
+var S_PatternChain = function() {
+  this.chain = [];
+  this.chainTypes = [];
+
+  /**
+   * @description Adds a pattern and its type ('pattern') to the chain
+   * @param {S_Pattern} pattern A pattern
+   */
+  this.addPattern = function (pattern) {
+    this.chain.push(pattern);
+    this.chainTypes.push('pattern');
+  };
+
+  /**
+   * @description Adds a pattern chain and its type ('patternChain') to the chain
+   * @param {S_PatternChain} patternChain A pattern chain
+   */
+  this.addPatternChain = function (patternChain) {
+    this.chain.push(patternChain);
+    this.chainTypes.push('patternChain');
+  };
+
+  /**
+   * @description
+   * @param {string} open
+   * @param {string} close
+   * @param {string} flags
+   */
+  this.surround = function (open, close, flags) {
+    var openPattern = new S_Pattern();
+    openPattern.add(open);
+    this.chain = [openPattern] + chain;
+    var closePattern = new S_Pattern();
+    closePattern.add(close);
+    this.addPattern(closePattern);
+  };
+
+  /**
+   * @description
+   * @param {string[]} open
+   * @param {string[]} close
+   * @param {string} flags
+   */
+  this.surroundChoice = function (open, close, flags) {
+    var openPattern = new S_Pattern();
+    openPattern.addMany(open);
+    this.chain = [openPattern] + this.chain;
+    this.chainTypes.push('pattern');
+    var closePattern = new S_Pattern();
+    closePattern.addMany(close);
+    this.addPattern(closePattern);
+    this.chainTypes.push('pattern');
+  };
+};
+
+/**
+ * @description Data type for Occurrences of S_StringSet's
+ * @param {string[]} set
+ * @param {int} howMany
+ * @param {int} howOftenMin
+ * @param {int} howOftenMax
+ * @param {string} sort
+ */
+var S_Occurrence = function() {
+  this.set = [];
+  this.howMany = 0;
+  this.howOftenMin = 0;
+  this.howOftenMax = 0;
+  this.sort = '';
+};
+
+/**
+ * @description Data type for results after @Search-Method was executed on an S_String object
+ * @param {string[]} results What is (are) the result string(s)
+ * @param {int} howOften How often the pattern was found
+ * @param {int[]} atWhichPositions At which position(s) in the string
+ */
+var S_Trove = function() {
+  this.results = [];
+  this.howOften = 0;
+  this.atWhichPositions = [];
+};
