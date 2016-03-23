@@ -27,11 +27,11 @@ var S_String = function() {
   /**
    * @description Returns an index of a given search String.
    * @param {string} search The string whose index is needed
-   * @param {string} flags [first; last; inner=%; innerLast=%; occursMin=%; occursMax=%; occursExactly=%; ignoreCase]
+   * @param {string} [flags] [first; last; inner=%; innerLast=%; occursMin=%; occursMax=%; occursExactly=%; ignoreCase]
    * @return {number} the specified index of @search
    */
   this.indexOf = function(search, flags) {
-    if(!flags) { flags="first;"; }
+    if(!flags) { flags='first;'; }
     var selfCharPos = 0;		//current position inside self
     var searchCharPos = 0;		//current position inside the search string
     var indexFound = -1;		//the position where the wanted index was found, or -1
@@ -45,10 +45,11 @@ var S_String = function() {
     //parse flags
     var flagParser = new S_FlagParser();
     flagParser.getFlags(flags);
+    console.log('flags: '+flagParser.key);
     for(var i=0; i<flagParser.key.length; i++) {
       switch(flagParser.key[i]) {
         case "first":
-          targetIndex = 1; break;
+          targetIndex = 1; console.log('fits'); break;
         case "last":
           targetIndex = -1; break;
         case "inner":
@@ -100,7 +101,7 @@ var S_String = function() {
   /**
    * @description Returns all indexes of a given search string
    * @param {string} search The string whose index is needed
-   * @param {string} flags [occursMin=%; occursMax=%, occursExactly=%, ignoreCase]
+   * @param {string} [flags] [occursMin=%; occursMax=%, occursExactly=%, ignoreCase]
    * @return {number[]} all indexes of @search
    */
   this.allIndexesOf = function(search, flags) {
@@ -273,8 +274,8 @@ var S_String = function() {
 
   /**
    * @description Counts how often a search string occurs
-   * @search {string} The search string
-   * @flags {string} TODO
+   * @param {string} search The search string
+   * @param {string} [flags] TODO
    * @return {int} 0 if not found, otherwise the number of occurrences
    */
   this.countOccurrences = function(search, flags) {
@@ -293,7 +294,7 @@ var S_String = function() {
 
   /**
    * @description Reverses the order of all string characters
-   * @flags {string} [self] -> apply to this object; [new] -> return reverse string to new String object
+   * @flags {string} [flags] 'self' -> apply to this object; 'new' -> return reverse string to new String object
    * @return {string} null if applied to self; otherwise the reverse string
    */
   this.reverse = function(flags) {
@@ -329,25 +330,19 @@ var S_FlagParser = function() {
     //get all delimiter positions
     var delimiterPos = [];
     var currentDelimiterPos = 0;
-    while(true) {
-      currentDelimiterPos = Instr(flags,";", currentDelimiterPos+1);
-      if(currentDelimiterPos == 0) { break; }
+    while(currentDelimiterPos != -1) {
+      currentDelimiterPos = flags.indexOf(';', currentDelimiterPos+1);
       delimiterPos.push(currentDelimiterPos);
     }
 
     for(var i=0; i<delimiterPos.length; i++) {
-      var startPos;
-      if(i == 0) {
-        startPos = 1;
-      } else {
-        startPos = delimiterPos[i-1]+1
-      }
+      var startPos = (i == 0) ? 0 : delimiterPos[i-1];
       var flag = flags.substr(startPos, delimiterPos[i]-startPos).trim();
 
-      var equalsPos = flag.indexOf("=");
-      if(equalsPos > 0) {
-        this.key.push(flag.substr(1, equalsPos-1));
-        this.value.push(flag.substr(equalsPos+1));
+      var equalsPos = flag.indexOf('=');
+      if(equalsPos > -1) {
+        this.key.push(flag.substr(0, equalsPos));
+        this.value.push(flag.substr(equalsPos));
       } else {
         this.key.push(flag);
         this.value.push('');
