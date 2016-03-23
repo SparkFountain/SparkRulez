@@ -27,6 +27,14 @@
       document.getElementById('quickBrownFox').innerHTML = quickBrownFox.getValue();
       document.getElementById('ex1').innerHTML = quickBrownFox.getValue();
       document.getElementById('ex2').innerHTML = quickBrownFox.indexOf('quick', 'first;');
+      document.getElementById('ex3').innerHTML = quickBrownFox.indexOf('the', 'last;');
+      var allOs = quickBrownFox.allIndexesOf('o');
+      for(var i=0; i<allOs.length; i++) {
+        document.getElementById('ex4').innerHTML += allOs[i];
+        if(i<allOs.length) {
+          document.getElementById('ex4').innerHTML += ', ';
+        }
+      }
     }
   </script>
 </head>
@@ -35,6 +43,8 @@
     <div id="quickBrownFox"></div>
     <p>Pure string value: <span id="ex1"></span></p>
     <p>Index of the letter 'q' where the String 'quick' first occurs: <span id="ex2"></span></p>
+    <p>Index of the letter 't' where the String 'the' last occurs: <span id="ex3"></span></p>
+    <p>All indexes of the letter 'o' [12, 17, 26]: <span id="ex4"></span></p>
   </div>
 </body>
 </html>
