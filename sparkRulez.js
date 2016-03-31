@@ -27,94 +27,59 @@ var S_String = function() {
   /**
    * @description Returns an index of a given search String.
    * @param {string} search The string whose index is needed
-   * @param {string} [flags] [first; last; inner=%; innerLast=%; occursMin=%; occursMax=%; occursExactly=%; ignoreCase]
+   * @param {object} [flags] [first; last; inner=%; innerLast=%; occursMin=%; occursMax=%; occursExactly=%; ignoreCase]
    * @return {number} the specified index of @search
    */
   this.indexOf = function(search, flags) {
-    if(!flags) { flags='first;'; }
-    var selfCharPos = 0;		//current position inside self
-    var searchCharPos = 0;		//current position inside the search string
+    if(!flags) {
+      flags = {position: 'first'}
+    }
     var indexFound = -1;		//the position where the wanted index was found, or -1
-    var minIndexes = -1;		//how many indexes need to occur at least
-    var maxIndexes = 10000;	//how many indexes need to occur at most
-    var totalIndexes = 0;		//how many indexes have been found
-    var targetIndex;			//the how maniest index should be returned
     var selfFormatted = this.value;
-    var searchFormatted = search;
+    var occurrences = selfFormatted.match(new RegExp(search, 'g') || []).length;
 
-    //parse flags
-    var flagParser = new S_FlagParser();
-    flagParser.getFlags(flags);
-    console.log('flags: '+flagParser.key);
-    for(var i=0; i<flagParser.key.length; i++) {
-      switch(flagParser.key[i]) {
-        case "first":
-          targetIndex = 1; console.log('fits'); break;
-        case "last":
-          targetIndex = -1; break;
-        case "inner":
-          //Print "inner flag matched with value "+flagParser.value[i]
-          targetIndex = parseInt(flagParser.value[i]);
-          break;
-        case "innerLast":
-          targetIndex = 0 - parseInt(flagParser.value[i]); break;
-        case "occursMin":
-          minIndexes = parseInt(flagParser.value[i]); break;
-        case "occursMax":
-          maxIndexes = parseInt(flagParser.value[i]); break;
-        case "occursExactly":
-          minIndexes = parseInt(flagParser.value[i]);
-          maxIndexes = parseInt(flagParser.value[i]);
-          break;
-        case "ignoreCase":
-          selfFormatted = selfFormatted.toLowerCase();
-          searchFormatted = searchFormatted.toLowerCase();
-          break;
-      }
+    if('ignoreCase' in flags) {
+      search = search.toLowerCase();
     }
 
-    while(selfCharPos < selfFormatted.length) {
-      //Print "selfCharPos: "+selfCharPos
-      //Print "searchCharPos: "+searchCharPos
-
-      if(selfFormatted[selfCharPos] == searchFormatted[searchCharPos]) {
-        if(indexFound = -1) { indexFound = selfCharPos; }
-        searchCharPos++;
-      } else {
-        searchCharPos = 0;
-        indexFound = -1;
-      }
-
-      selfCharPos++;
-
-      if(searchCharPos == search.length) {
-        totalIndexes = totalIndexes + 1;
-        if(((targetIndex == totalIndexes) || targetIndex < 0) && (totalIndexes >= minIndexes) && (totalIndexes <= maxIndexes)) { break; }
-        searchCharPos = 0;
-      }
+    //execute the actual search
+    switch(flags.position) {
+      case 'first': indexFound = selfFormatted.indexOf(search); break;
+      case 'last': indexFound = selfFormatted.lastIndexOf(search); break;
+      default: indexFound = selfFormatted.indexOf(search, flags.position);
     }
 
-    if(targetIndex != totalIndexes) { indexFound = -1; }
+    if('occursMin' in flags && occurrences < flags.occursMin) {
+      indexFound = -1;
+    } else if('occursMax' in flags && occurrences > flags.occursMax) {
+      indexFound = -1;
+    } else if('occursExactly' in flags && occurrences != flags.occursExactly) {
+      indexFound = -1;
+    }
+
     return indexFound;
+
   };
 
   /**
    * @description Returns all indexes of a given search string
    * @param {string} search The string whose index is needed
-   * @param {string} [flags] [occursMin=%; occursMax=%, occursExactly=%, ignoreCase]
+   * @param {object} [flags] [occursMin=%; occursMax=%, occursExactly=%, ignoreCase]
    * @return {number[]} all indexes of @search
    */
   this.allIndexesOf = function(search, flags) {
-    if(!flags) { flags = ''; }
+    if(!flags) {
+      flags = {};
+    }
     var result = [];
-    var lookIndex = 1;
+    var lookIndex = 0;
     while(true) {
       //Print "hanging in AllIndexesOf with inner="+lookIndex
-      //TODO: pass the remaining flags too
-      var currentResult = this.indexOf(search, "inner="+lookIndex+";");
+      flags.position = lookIndex;
+      var currentResult = this.indexOf(search, flags);
       if(currentResult > -1) {
         result.push(currentResult);
-        lookIndex++;
+        lookIndex = currentResult+1;
       } else {
         break;
       }
@@ -312,44 +277,6 @@ var S_String = function() {
   };
 };
 
-/**
- * @description Data type for Flag Parsing (used mainly in S_String object methods)
- * @param {string[]} key A string array which saves all keys (=flag names)
- * @param {string[]} value A string array which saves all flag values (if they exist)
- */
-var S_FlagParser = function() {
-  this.key = [];
-  this.value = [];
-
-  /**
-   * @description Parses all flags from a given string and stores them in the object's @key / @value field
-   * @param {string} flags An string that contains flags
-   * @annotation This method uses "classical" string functions instead of S_String methods to avoid infinite loops
-   */
-  this.getFlags = function(flags) {
-    //get all delimiter positions
-    var delimiterPos = [];
-    var currentDelimiterPos = 0;
-    while(currentDelimiterPos != -1) {
-      currentDelimiterPos = flags.indexOf(';', currentDelimiterPos+1);
-      delimiterPos.push(currentDelimiterPos);
-    }
-
-    for(var i=0; i<delimiterPos.length; i++) {
-      var startPos = (i == 0) ? 0 : delimiterPos[i-1];
-      var flag = flags.substr(startPos, delimiterPos[i]-startPos).trim();
-
-      var equalsPos = flag.indexOf('=');
-      if(equalsPos > -1) {
-        this.key.push(flag.substr(0, equalsPos));
-        this.value.push(flag.substr(equalsPos));
-      } else {
-        this.key.push(flag);
-        this.value.push('');
-      }
-    }
-  };
-};
 
 /**
  * @description Patterns like RegEx's

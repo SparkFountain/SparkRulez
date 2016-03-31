@@ -26,12 +26,12 @@
       quickBrownFox.setValue('The quick brown fox jumps over the lazy cat!');
       document.getElementById('quickBrownFox').innerHTML = quickBrownFox.getValue();
       document.getElementById('ex1').innerHTML = quickBrownFox.getValue();
-      document.getElementById('ex2').innerHTML = quickBrownFox.indexOf('quick', 'first;');
-      document.getElementById('ex3').innerHTML = quickBrownFox.indexOf('the', 'last;');
+      document.getElementById('ex2').innerHTML = quickBrownFox.indexOf('quick', {position: 'first'});
+      document.getElementById('ex3').innerHTML = quickBrownFox.indexOf('the', {position: 'last'});
       var allOs = quickBrownFox.allIndexesOf('o');
       for(var i=0; i<allOs.length; i++) {
         document.getElementById('ex4').innerHTML += allOs[i];
-        if(i<allOs.length) {
+        if(i<allOs.length-1) {
           document.getElementById('ex4').innerHTML += ', ';
         }
       }
