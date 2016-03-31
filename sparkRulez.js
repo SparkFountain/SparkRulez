@@ -121,45 +121,52 @@ var S_String = function() {
 
   /**
    * @description Searches for a PatternChain in self
-   * @patternChain {S_PatternChain}
-   * @flags
+   * @param {S_PatternChain} patternChain
    */
-  this.search = function(patternChain, flags) {
-    if(!flags) {
-      flags = {};
-    }
-
-    //@TODO
-    console.log("pattern chain has "+(patternChain.chain.length)+" elements.");
-
+  this.search = function(units) {
     var result = new S_Trove();
-    for(var i=0; i<patternChain.chain.length; i++) {
-      var tempResults = [''];
-      var tempAtWhichPositions = [-1];
-      //patterns
-      if(patternChain.chainTypes[i] == "pattern") {
-        var currentPattern = S_Pattern(patternChain.chain[i]);
-        var indexes = 0;
-        //iterate over all strings in the current pattern
-        for(var j=0; j<currentPattern.chain.length; j++) {
-          var currentString = currentPattern.chain[j];
-
-          for(var k=0; k<tempResults.length; k++) {
-            var stringIndexes = this.allIndexesOf(tempResults[k] + currentPattern.chain[j]);	//append all strings that have already been found at first position
-            console.log(tempResults[k] + currentPattern.chain[j]+" occurs "+Len(stringIndexes)+" times.");
-
-            for(var stringIndex=0; stringIndex<stringIndexes.length; stringIndex++) {
-              tempResults = tempResults + [currentString];
-              tempAtWhichPositions += [stringIndexes[stringIndex]];
-            }
-          }
+    var continueSearch = true;
+    
+    for(var unitIndex=0; unitIndex<units.length; unitIndex++) {
+      if(!continueSearch) {
+        console.log('stop search'); break;
+      }
+      
+      var unit = units[unitIndex];
+      console.log('[Unit]', unit.unit);
+      
+      for(var chainIndex=0; chainIndex<unit.chain.length; chainIndex++) {
+        var pattern = unit.chain[chainIndex];
+        console.log('  [Pattern]', pattern.name);
+        var regexString = '(';
+        for(var dictionaryIndex=0; dictionaryIndex<pattern.dictionary.length; dictionaryIndex++) {
+          var s = pattern.dictionary[dictionaryIndex].toString();
+          
+          //escape all regex' own chars
+          ['<', '(', '[', '{', '\\', '^', '-', '=', '$', '!', '|', ']', '}', ')', '?', '*', '+', '.', '>'].forEach(function(char) {
+            s = s.replace(char, '\\'+char);
+          });
+          
+          regexString += '(' + s + ')';
+          if(dictionaryIndex<pattern.dictionary.length-1) regexString += '|';
         }
-      } else {
-        //pattern chains
-        console.log("found pattern chain");
+        regexString += ')';
+        
+        if('occurs' in pattern) {
+          regexString += '{' + pattern.occurs[0] + ',' + pattern.occurs[1] + '}';
+        } else if('occursExactly' in pattern) {
+          regexString += '{' + pattern.occursExactly + '}';
+        }
+        
+        //console.log(regexString);
+        
+        var regex = new RegExp(regexString, 'g');
+        var matches = this.getValue().match(regex);
+        //console.log(matches);
+        continueSearch = unit.optional || (matches.length>0);
       }
     }
-
+    
     return result;
   };
 
