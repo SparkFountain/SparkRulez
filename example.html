@@ -35,6 +35,22 @@
           document.getElementById('ex4').innerHTML += ', ';
         }
       }
+      var quickRange = quickBrownFox.indexRangeOf('quick');
+      document.getElementById('ex5').innerHTML = quickRange[0] + ', ' + quickRange[1];
+      document.getElementById('ex6').innerHTML = quickBrownFox.subString({start: 10, end: 19});
+      document.getElementById('ex7').innerHTML = quickBrownFox.asciiAt(3);
+      document.getElementById('ex8').innerHTML = quickBrownFox.charAt(22);
+      document.getElementById('ex9').innerHTML = quickBrownFox.countOccurrences('a');
+      document.getElementById('ex10').innerHTML = quickBrownFox.reverse();
+      var splitBySpaces = quickBrownFox.split(' ');
+      document.getElementById('ex11').innerHTML = '[';
+      for(var i=0; i<splitBySpaces.length; i++) {
+        document.getElementById('ex11').innerHTML += splitBySpaces[i];
+        if(i<splitBySpaces.length-1) {
+          document.getElementById('ex11').innerHTML += ', ';
+        }
+      }
+      document.getElementById('ex11').innerHTML += ']';
     }
   </script>
 </head>
@@ -45,6 +61,13 @@
     <p>Index of the letter 'q' where the String 'quick' first occurs: <span id="ex2"></span></p>
     <p>Index of the letter 't' where the String 'the' last occurs: <span id="ex3"></span></p>
     <p>All indexes of the letter 'o' [12, 17, 26]: <span id="ex4"></span></p>
+    <p>Index range of substring 'quick' [4, 8]: <span id="ex5"></span></p>
+    <p>Substring from position 10 To 19 (both inclusive; index = 0) ['brown fox']: <span id="ex6"></span></p>
+    <p>Ascii code of character at position 3 (= space character [32]): <span id="ex7"></span></p>
+    <p>Character at position 22 ['m']: <span id="ex8"></span></p>
+    <p>How often letter 'a' occurs in the string [2]: <span id="ex9"></span></p>
+    <p>Reverse the whole string: <span id="ex10"></span></p>
+    <p>Array that contains each Substring split by space character: <span id="ex11"></span></p>
   </div>
 </body>
 </html>

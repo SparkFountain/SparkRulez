@@ -27,7 +27,7 @@ var S_String = function() {
   /**
    * @description Returns an index of a given search String.
    * @param {string} search The string whose index is needed
-   * @param {object} [flags] [first; last; inner=%; innerLast=%; occursMin=%; occursMax=%; occursExactly=%; ignoreCase]
+   * @param {object} [flags] position; occursMin; occursMax; occursExactly; ignoreCase
    * @return {number} the specified index of @search
    */
   this.indexOf = function(search, flags) {
@@ -95,7 +95,9 @@ var S_String = function() {
    * @return {number[]} the specified index range of @search
    */
   this.indexRangeOf = function(search, flags) {
-    if(!flags) { flags = 'first;'; }
+    if(!flags) {
+      flags = {position: 'first'};
+    }
     var found = this.indexOf(search, flags);
     if(found == -1) {
       return [-1,-1];
@@ -123,7 +125,9 @@ var S_String = function() {
    * @flags
    */
   this.search = function(patternChain, flags) {
-    if(!flags) { flags = ''; }
+    if(!flags) {
+      flags = {};
+    }
 
     //@TODO
     console.log("pattern chain has "+(patternChain.chain.length)+" elements.");
@@ -160,22 +164,22 @@ var S_String = function() {
   };
 
   /**
-   * @description Returns a substring of self with left and right borders.
-   * @param {number} startPos The left border (where the result starts)
-   * @param {number} endPos The right border (where the result ends)
-   * @param {string} flags [endAsLength] -> return substring from startPos to (startPos+end)
-   * @return {string} TODO
+   * @description Returns a substring of self.
+   * @param {object} [flags] start; end; length
+   * @return {string} The substring
    */
-  this.subString = function(startPos, endPos, flags) {
-    if(!flags) { flags = 'endAsPos'; }
-    var result = '';
-    var endPosReal = endPos;
-    if(flags == 'endAsLength') { endPosReal += startPos; }
-    for(var i = startPos; i<=endPosReal; i++) {
-      result += String.fromCharCode(this.value[i]);
+  this.subString = function(flags) {
+    if(!flags) {
+      flags = {start: 0}
     }
 
-    return result;
+    if('length' in flags) {
+      return this.getValue().substr(flags.start, flags.length);
+    } else if('end' in flags) {
+      return this.getValue().substring(flags.start, flags.end);
+    } else {
+      return this.getValue().substr(flags.start);
+    }
   };
 
   /**
@@ -195,7 +199,7 @@ var S_String = function() {
    * @return {int} the ASCII code of the string character at @pos
    */
   this.asciiAt = function(pos) {
-    return this.Value[pos];
+    return this.value.charCodeAt(pos);
   };
 
   /**
@@ -213,67 +217,26 @@ var S_String = function() {
    * @return {string[]} Null if delimiter not found, otherwise an array with separated strings
    */
   this.split = function(delimiter) {
-    var delimiterIndexes = this.allIndexesOf(delimiter);
-    if(delimiterIndexes.length == 0) { return null; }
-
-    var result = [];
-    //if delimiter occurs at last position of this element, there is no part-string behind it
-    //TODO change this code for JavaScript??
-    if(delimiterIndexes[delimiterIndexes.length-1] == this.value.length-1) {
-      result = new String[delimiterIndexes.length]
-    } else {
-      result = new String[delimiterIndexes.length+1]
-    }
-
-    var startPos = 0;
-    for(var i=0; i<delimiterIndexes.length; i++) {
-      result[i] = this.subString(startPos, delimiterIndexes[i]-1);
-      startPos = delimiterIndexes[i] + 1;
-    }
-    if(startPos < this.value.length) {
-      result[delimiterIndexes.length] = this.subString(startPos, Self.value.length-1);
-    }
-
-    return result;
+    return this.getValue().split(delimiter);
   };
 
   /**
    * @description Counts how often a search string occurs
    * @param {string} search The search string
-   * @param {string} [flags] TODO
+   * @param {object} [flags] TODO is this needed?
    * @return {int} 0 if not found, otherwise the number of occurrences
    */
   this.countOccurrences = function(search, flags) {
-    if(!flags) { flags = ''; }
-    var result = 0;
-    var pos = 1;
-    var i = -1;
-    while(true) {
-      i = this.indexOf(search, "inner="+pos+";");
-      if(i == -1) { break; }
-      pos = pos + 1;
-      result = result + 1
-    }
-    return result;
+    return (this.getValue().match(new RegExp(search, 'g')) || []).length;
   };
 
   /**
    * @description Reverses the order of all string characters
-   * @flags {string} [flags] 'self' -> apply to this object; 'new' -> return reverse string to new String object
+   * @flags {object} [flags] 'self' -> apply to this object; 'new' -> return reverse string to new String object
    * @return {string} null if applied to self; otherwise the reverse string
    */
   this.reverse = function(flags) {
-    if(!flags) { flags = 'self'; }
-    var result = '';
-    for(var i=this.value.length-1; i>=0; i--) {
-      result += this.charAt(i);
-    }
-
-    if(flags == 'self') {
-      return null;
-    } else {
-      return result;
-    }
+    return this.getValue().split("").reverse().join("");
   };
 };
 
